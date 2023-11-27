@@ -5,6 +5,7 @@ import torchvision.transforms as T
 from diffusers.pipeline_utils import DiffusionPipeline
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from PIL import Image, ImageDraw, ImageFont
 
 from src.utils.image_composition import compose_img, compose_img_dresscode
 
@@ -133,44 +134,44 @@ def generate_images_from_mgd_pipe(
                 final_img = T.functional.to_pil_image(final_img)
                 model_image = T.functional.to_pil_image(model_i)
                 mask_image_i = T.functional.to_pil_image(mask_img[i])
-                pose_map_i = T.functional.to_pil_image(pose_map[i])
+                pose_map_i = pose_map[i].max(dim=0)[0]
+                pose_map_i = T.functional.to_pil_image(pose_map_i)
                 sketch_i = T.functional.to_pil_image(sketch[i])
 
-                new_width = (
-                    model_image.width
-                    + mask_image_i.width
-                    + pose_map_i.width
-                    + sketch_i.width
-                    + final_img.width
-                )
-                new_height = max(
-                    model_image.height,
-                    mask_image_i.height,
-                    pose_map_i.height,
-                    sketch_i.height,
-                    final_img.height,
-                )
+                text_image = Image.new('RGB', (model_image.width, model_image.height), color = 'black')
+                draw = ImageDraw.Draw(text_image)
+                font = ImageFont.load_default()
+                text = prompts[i].replace(",", "\n")
+
+                lines = text.split('\n')
+                max_width = max(draw.textsize(line, font=font)[0] for line in lines)
+                total_height = sum(draw.textsize(line, font=font)[1] for line in lines)
+
+                # Starting Y position
+                width = model_image.width
+                height = model_image.height
+                y = (height - total_height) / 2
+
+                # Draw each line of text
+                for line in lines:
+                    line_width, line_height = draw.textsize(line, font=font)
+                    x = (width - line_width) / 2
+                    draw.text((x, y), line, fill="white", font=font)
+                    y += line_height
+
+                text_width, text_height = draw.textsize(text, font=font)
+
+                new_width = model_image.width * 3
+                new_height = height * 2
+
                 concat_image = Image.new("RGB", (new_width, new_height))
 
-                concat_image.paste(model_image, (0, 0))
-                concat_image.paste(mask_image_i, (model_image.width, 0))
-                concat_image.paste(
-                    pose_map_i, (model_image.width + mask_image_i.width, 0)
-                )
-                concat_image.paste(
-                    sketch_i,
-                    (model_image.width + mask_image_i.width + pose_map_i.width, 0),
-                )
-                concat_image.paste(
-                    final_img,
-                    (
-                        model_image.width
-                        + mask_image_i.width
-                        + pose_map_i.width
-                        + sketch_i.width,
-                        0,
-                    ),
-                )
+                concat_image.paste(text_image, (0, 0))
+                concat_image.paste(mask_image_i, (width, 0))
+                concat_image.paste(model_image, (width*2, 0))
+                concat_image.paste(pose_map_i, (0, height))
+                concat_image.paste(sketch_i, (width, height))
+                concat_image.paste(final_img, (width*2, height))
 
                 concat_image.save(
                     os.path.join(path, batch["im_name"][i].replace(".jpg", ext))
