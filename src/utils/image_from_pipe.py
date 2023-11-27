@@ -1,10 +1,11 @@
 import os
-from tqdm import tqdm
-import torch
 
+import torch
 import torchvision.transforms as T
 from diffusers.pipeline_utils import DiffusionPipeline
 from torch.utils.data import DataLoader
+from tqdm import tqdm
+
 from src.utils.image_composition import compose_img, compose_img_dresscode
 
 
@@ -24,8 +25,8 @@ def generate_images_from_mgd_pipe(
     no_pose: bool = False,
     disentagle: bool = False,
     seed: int = 1234,
-    ) -> None:
-    #This function generates images from the given test dataloader and saves them to the output directory.
+) -> None:
+    # This function generates images from the given test dataloader and saves them to the output directory.
     """
     Args:
         test_order: The order of the test dataset.
@@ -42,12 +43,12 @@ def generate_images_from_mgd_pipe(
         no_pose: Whether to use the pose.
         disentagle: Whether to use disentagle.
         seed: The seed.
-        
+
         Returns:
         None
-    """ 
-    assert(save_name != ""), "save_name must be specified"
-    assert(output_dir != ""), "output_dir must be specified"
+    """
+    assert save_name != "", "save_name must be specified"
+    assert output_dir != "", "output_dir must be specified"
 
     path = os.path.join(output_dir, f"{save_name}_{test_order}", "images")
 
@@ -58,7 +59,9 @@ def generate_images_from_mgd_pipe(
         model_img = batch["image"]
         mask_img = batch["inpaint_mask"]
         mask_img = mask_img.type(torch.float32)
-        prompts = batch["original_captions"]  # prompts is a list of length N, where N=batch size.
+        prompts = batch[
+            "original_captions"
+        ]  # prompts is a list of length N, where N=batch size.
         pose_map = batch["pose_map"]
         sketch = batch["im_sketch"]
         ext = ".jpg"
@@ -107,21 +110,68 @@ def generate_images_from_mgd_pipe(
             for i in range(len(generated_images)):
                 model_i = model_img[i] * 0.5 + 0.5
                 if dataset == "vitonhd":
-                    final_img = compose_img(model_i, generated_images[i], batch['im_parse'][i])
-                else: # dataset == Dresscode
+                    final_img = compose_img(
+                        model_i, generated_images[i], batch["im_parse"][i]
+                    )
+                else:  # dataset == Dresscode
                     face = batch["stitch_label"][i].to(model_img.device)
-                    face = T.functional.resize(face, 
-                                               size=(512,384), 
-                                               interpolation=T.InterpolationMode.BILINEAR, 
-                                               antialias = True
-                                               )
+                    face = T.functional.resize(
+                        face,
+                        size=(512, 384),
+                        interpolation=T.InterpolationMode.BILINEAR,
+                        antialias=True,
+                    )
 
                     final_img = compose_img_dresscode(
-                        gt_img = model_i, 
-                        fake_img = T.functional.to_tensor(generated_images[i]).to(model_img.device), 
-                        im_head = face
-                        )
-                
+                        gt_img=model_i,
+                        fake_img=T.functional.to_tensor(generated_images[i]).to(
+                            model_img.device
+                        ),
+                        im_head=face,
+                    )
+
                 final_img = T.functional.to_pil_image(final_img)
-                final_img.save(
-                    os.path.join(path, batch["im_name"][i].replace(".jpg", ext)))
+                model_image = T.functional.to_pil_image(model_i)
+                mask_image_i = T.functional.to_pil_image(mask_img[i])
+                pose_map_i = T.functional.to_pil_image(pose_map[i])
+                sketch_i = T.functional.to_pil_image(sketch[i])
+
+                new_width = (
+                    model_image.width
+                    + mask_image_i.width
+                    + pose_map_i.width
+                    + sketch_i.width
+                    + final_img.width
+                )
+                new_height = max(
+                    model_image.height,
+                    mask_image_i.height,
+                    pose_map_i.height,
+                    sketch_i.height,
+                    final_img.height,
+                )
+                concat_image = Image.new("RGB", (new_width, new_height))
+
+                concat_image.paste(model_image, (0, 0))
+                concat_image.paste(mask_image_i, (model_image.width, 0))
+                concat_image.paste(
+                    pose_map_i, (model_image.width + mask_image_i.width, 0)
+                )
+                concat_image.paste(
+                    sketch_i,
+                    (model_image.width + mask_image_i.width + pose_map_i.width, 0),
+                )
+                concat_image.paste(
+                    final_img,
+                    (
+                        model_image.width
+                        + mask_image_i.width
+                        + pose_map_i.width
+                        + sketch_i.width,
+                        0,
+                    ),
+                )
+
+                concat_image.save(
+                    os.path.join(path, batch["im_name"][i].replace(".jpg", ext))
+                )
