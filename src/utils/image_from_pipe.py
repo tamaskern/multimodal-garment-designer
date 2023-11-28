@@ -70,6 +70,7 @@ def generate_images_from_mgd_pipe(
         ext = ".jpg"
 
         if pose_shuffle and not model_shuffle:
+            print("pose_shuffle")
             model_img[:] = model_img[0]
             mask_img[:] = mask_img[0]
             prompts[:] = prompts[0]
@@ -83,6 +84,7 @@ def generate_images_from_mgd_pipe(
                 batch["stitch_label"][:] = batch["stitch_label"][0]
 
         elif model_shuffle and not pose_shuffle:
+            print("model_shuffle")
             pose_map[:] = pose_map[0]
         elif pose_shuffle and model_shuffle:
             raise ValueError("pose_shuffle and model_shuffle cannot be True at the same time")
