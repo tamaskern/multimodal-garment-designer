@@ -75,7 +75,9 @@ def generate_images_from_mgd_pipe(
         elif sketch_abl and not pose_abl and not text_abl:
             sketch[:] = sketch[0]
         elif text_abl and not pose_abl and not sketch_abl:
-            prompts[:] = prompts[0]
+            first_prompt = prompts[0]
+            first_prompt = first_prompt.replace(",", " ")
+            prompts[:] = first_prompt
 
         if disentagle:
             guidance_scale = guidance_scale
