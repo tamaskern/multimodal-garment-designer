@@ -75,8 +75,6 @@ def generate_images_from_mgd_pipe(
             mask_img[:] = mask_img[0]
             prompts[:] = prompts[0]
             sketch[:] = sketch[0]
-            im_parse[:] = im_parse[0]
-            stitch_label[:] = stitch_label[0]
 
             if dataset == "vitonhd":
                  batch["im_parse"][:] = batch["im_parse"][0]
