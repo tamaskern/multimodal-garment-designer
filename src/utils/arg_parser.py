@@ -71,8 +71,8 @@ def eval_parse_args() -> argparse.Namespace:
     #  input parameters
     parser.add_argument("--mask_type", type=str, default="bounding_box", choices=["keypoints", "bounding_box"])
     parser.add_argument("--no_pose", action="store_true", help="exclude posemap from input")
-    parser.add_argument("--pose_shuffle", action="store_true", help="pick the first model in the batch and use it with all poses in the batch")
-    parser.add_argument("--model_shuffle", action="store_true", help="pick the first pose in the batch and use it with all models in the batch")
+    parser.add_argument("--pose_abl", action="store_true", help="pick the first pose in the batch and use it with all models in the batch")
+    parser.add_argument("--sketch_abl", action="store_true", help="pick the first sktech in the batch and use it with all models in the batch")
 
 
     # disentagle classifier free guidance parameters

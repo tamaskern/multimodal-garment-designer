@@ -148,8 +148,8 @@ def main() -> None:
             no_pose=False,
             disentagle=False,
             seed=args.seed,
-            pose_shuffle=args.pose_shuffle,
-            model_shuffle=args.model_shuffle,
+            pose_abl=args.pose_abl,
+            sketch_abl=args.sketch_abl,
         )
 
 

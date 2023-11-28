@@ -26,8 +26,8 @@ def generate_images_from_mgd_pipe(
     no_pose: bool = False,
     disentagle: bool = False,
     seed: int = 1234,
-    pose_shuffle: bool = False,
-    model_shuffle: bool = False,
+    pose_abl: bool = False,
+    sktech_abl: bool = False,
 ) -> None:
     # This function generates images from the given test dataloader and saves them to the output directory.
     """
@@ -69,23 +69,12 @@ def generate_images_from_mgd_pipe(
         sketch = batch["im_sketch"]
         ext = ".jpg"
 
-        if pose_shuffle and not model_shuffle:
-            print("pose_shuffle")
-            model_img[:] = model_img[0]
-            mask_img[:] = mask_img[0]
-            prompts[:] = prompts[0]
-            sketch[:] = sketch[0]
-
-            if dataset == "vitonhd":
-                 batch["im_parse"][:] = batch["im_parse"][0]
-            else:  # dataset == Dresscode
-                batch["stitch_label"][:] = batch["stitch_label"][0]
-
-        elif model_shuffle and not pose_shuffle:
-            print("model_shuffle")
+        if pose_abl and not sketch_abl:
             pose_map[:] = pose_map[0]
-        elif pose_shuffle and model_shuffle:
-            raise ValueError("pose_shuffle and model_shuffle cannot be True at the same time")
+        elif sketch_abl and not pose_abl:
+            sketch[:] = sketch[0]
+        elif pose_abl and sketch_abl:
+            raise ValueError("pose_abl and sketch_abl cannot be True at the same time")
 
         if disentagle:
             guidance_scale = guidance_scale
