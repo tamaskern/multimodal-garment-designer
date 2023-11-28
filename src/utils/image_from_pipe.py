@@ -26,6 +26,8 @@ def generate_images_from_mgd_pipe(
     no_pose: bool = False,
     disentagle: bool = False,
     seed: int = 1234,
+    pose_shuffle: bool = False,
+    model_shuffle: bool = False,
 ) -> None:
     # This function generates images from the given test dataloader and saves them to the output directory.
     """
@@ -66,6 +68,16 @@ def generate_images_from_mgd_pipe(
         pose_map = batch["pose_map"]
         sketch = batch["im_sketch"]
         ext = ".jpg"
+
+        if pose_shuffle and not model_shuffle:
+            model_img[:] = model_img[0]
+            mask_img[:] = mask_img[0]
+            prompts[:] = prompts[0]
+            sketch[:] = sketch[0]
+        elif model_shuffle and not pose_shuffle:
+            pose_map[:] = pose_map[0]
+        elif pose_shuffle and model_shuffle:
+            raise ValueError("pose_shuffle and model_shuffle cannot be True at the same time")
 
         if disentagle:
             guidance_scale = guidance_scale
