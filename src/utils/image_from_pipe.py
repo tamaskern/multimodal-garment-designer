@@ -67,8 +67,6 @@ def generate_images_from_mgd_pipe(
         ]  # prompts is a list of length N, where N=batch size.
         pose_map = batch["pose_map"]
         sketch = batch["im_sketch"]
-        im_parse = batch["im_parse"]
-        stitch_label = batch["stitch_label"]
         ext = ".jpg"
 
         if pose_shuffle and not model_shuffle:
@@ -78,6 +76,12 @@ def generate_images_from_mgd_pipe(
             sketch[:] = sketch[0]
             im_parse[:] = im_parse[0]
             stitch_label[:] = stitch_label[0]
+
+            if dataset == "vitonhd":
+                 batch["im_parse"][:] = batch["im_parse"][0]
+            else:  # dataset == Dresscode
+                batch["stitch_label"][:] = batch["stitch_label"][0]
+
         elif model_shuffle and not pose_shuffle:
             pose_map[:] = pose_map[0]
         elif pose_shuffle and model_shuffle:
@@ -128,10 +132,10 @@ def generate_images_from_mgd_pipe(
                 model_i = model_img[i] * 0.5 + 0.5
                 if dataset == "vitonhd":
                     final_img = compose_img(
-                        model_i, generated_images[i], im_parse[i]
+                        model_i, generated_images[i], batch["im_parse"][i]
                     )
                 else:  # dataset == Dresscode
-                    face = stit[i].to(model_img.device)
+                    face = batch["stitch_label"][i].to(model_img.device)
                     face = T.functional.resize(
                         face,
                         size=(512, 384),
