@@ -73,6 +73,7 @@ def eval_parse_args() -> argparse.Namespace:
     parser.add_argument("--no_pose", action="store_true", help="exclude posemap from input")
     parser.add_argument("--pose_abl", action="store_true", help="pick the first pose in the batch and use it with all models in the batch")
     parser.add_argument("--sketch_abl", action="store_true", help="pick the first sktech in the batch and use it with all models in the batch")
+    parser.add_argument("--text_abl", action="store_true", help="pick the first text in the batch and use it with all models in the batch")
 
 
     # disentagle classifier free guidance parameters

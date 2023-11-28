@@ -27,7 +27,8 @@ def generate_images_from_mgd_pipe(
     disentagle: bool = False,
     seed: int = 1234,
     pose_abl: bool = False,
-    sktech_abl: bool = False,
+    sketch_abl: bool = False,
+    text_abl: bool = False,
 ) -> None:
     # This function generates images from the given test dataloader and saves them to the output directory.
     """
@@ -69,12 +70,12 @@ def generate_images_from_mgd_pipe(
         sketch = batch["im_sketch"]
         ext = ".jpg"
 
-        if pose_abl and not sketch_abl:
+        if pose_abl and not sketch_abl and not text_abl:
             pose_map[:] = pose_map[0]
-        elif sketch_abl and not pose_abl:
+        elif sketch_abl and not pose_abl and not text_abl:
             sketch[:] = sketch[0]
-        elif pose_abl and sketch_abl:
-            raise ValueError("pose_abl and sketch_abl cannot be True at the same time")
+        elif text_abl and not pose_abl and not sketch_abl:
+            prompts[:] = prompts[0]
 
         if disentagle:
             guidance_scale = guidance_scale

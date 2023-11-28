@@ -150,6 +150,7 @@ def main() -> None:
             seed=args.seed,
             pose_abl=args.pose_abl,
             sketch_abl=args.sketch_abl,
+            text_abl=args.text_abl,
         )
 
 
